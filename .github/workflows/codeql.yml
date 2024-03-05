@@ -1,0 +1,51 @@
+% Constants
+weight = 4390000;  
+S = 554;   
+e = 0.90;
+CL_max = 1.5;
+CD0 = 0.0155;
+t_c = 0.115;
+Lambda = 37.5*(pi/180);  
+b = 68.45;   
+thrustmax = 1184;
+AR = (b^2) / S;
+rho = 1.225;  
+
+% Speed range
+vMin = 0;     
+vMax = 300;    
+climb = 5;
+
+% Increments
+range = vMin:climb:vMax;
+
+% Altitudes
+altitudes = [6000, 10000];
+
+% Preallocate arrays
+compress = zeros(length(range), length(altitudes));
+thrust = zeros(length(range), length(altitudes));
+
+% Calculations
+for j = 1:length(altitudes)
+    % Air density at altitude
+    rho_alt = rho * exp(-altitudes(j) / 7940);
+    
+    % Calculate compressible drag
+    M = range ./ sqrt(1.4 * 287 * (288.15 - 0.0065 * altitudes(j))); % Mach number
+    compress(:, j) = (0.5 * rho_alt * range.^2 * S * (CD0 + (CL_max^2 / (pi * e * AR)))) .* (1 + 0.12 * M.^2);
+    
+    % Calculate available thrust
+    thrust(:, j) = thrustmax - (0.25 * rho_alt * range.^2 * S * CD0) - (0.25 * rho_alt * range.^2 * S * CL_max^2 / (pi * e * AR));
+end
+
+% Plotting
+figure;
+hold on;
+plot(range, compress(:,1), 'r-', range, thrust(:,1), 'g-', range, compress(:,2), 'b-', range, thrust(:,2), 'm-');
+xlabel('Speed (m/s)');
+ylabel('Force (N)');
+title('Compressible Drag and Thrust Available at Different Altitudes');
+legend('Compressible Drag at 6000 m', 'Thrust Available at 6000 m', 'Compressible Drag at 10000 m', 'Thrust Available at 10000 m');
+hold off;
+
